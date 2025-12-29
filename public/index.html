@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pexify MVP</title>
+</head>
+<body>
+  <h1>Pexify</h1>
+
+  <button id="runBtn">Kontrolü Çalıştır</button>
+
+  <pre id="result">Sonuç burada görünecek</pre>
+
+  <script>
+    document.getElementById("runBtn").onclick = async () => {
+      const res = await fetch("/run", { method: "POST" });
+      const data = await res.json();
+      document.getElementById("result").textContent =
+        JSON.stringify(data, null, 2);
+    };
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,17 @@
+shipment_id: SHP-001
+target_country: USA
+
+documents:
+  invoice:
+    invoice_number: INV-1001
+    currency: USD
+    total_amount: 12500
+    gross_weight: 1000
+
+  packing_list:
+    package_count: 10
+    gross_weight: 1000
+
+  bill_of_lading:
+    bl_number: BL-555
+    gross_weight: 1000

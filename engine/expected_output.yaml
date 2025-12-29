@@ -1,0 +1,6 @@
+result: FAIL
+
+failed_rules:
+  - rule_id: BR-002
+    severity: error
+    message: "Gross weight mismatch between Packing List and Bill of Lading"

@@ -1,0 +1,19 @@
+version: 1
+
+engine:
+  name: pexify-rule-engine
+  mode: strict
+
+documents:
+  - invoice
+  - packing_list
+  - bill_of_lading
+
+rules:
+  - rule_id: BR-001
+    source: bs_rules.yaml
+
+  - rule_id: BR-002
+    source: bs_rules.yaml
+
+

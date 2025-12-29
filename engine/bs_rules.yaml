@@ -1,0 +1,33 @@
+- id: BR-001
+  description: Invoice and Packing List gross weight must match
+  severity: error
+
+  when:
+    documents:
+      - invoice
+      - packing_list
+
+  check:
+    left: documents.invoice.gross_weight
+    operator: equals
+    right: documents.packing_list.gross_weight
+
+  on_fail:
+    message: "Gross weight mismatch between Invoice and Packing List"
+
+- id: BR-002
+  description: Packing List and Bill of Lading gross weight must match
+  severity: error
+
+  when:
+    documents:
+      - packing_list
+      - bill_of_lading
+
+  check:
+    left: documents.packing_list.gross_weight
+    operator: equals
+    right: documents.bill_of_lading.gross_weight
+
+  on_fail:
+    message: "Gross weight mismatch between Packing List and Bill of Lading"
