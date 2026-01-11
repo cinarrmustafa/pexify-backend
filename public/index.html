@@ -1,25 +1,568 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pexify MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pexify - Document Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .section h2 {
+      color: #34495e;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    /* Auth Section */
+    .auth-section {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .auth-section input {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+
+    .btn-success {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Upload Section */
+    .upload-area {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .upload-area:hover {
+      border-color: #3498db;
+      background: #f8f9fa;
+    }
+
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #3498db;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-label:hover {
+      background: #2980b9;
+    }
+
+    .file-info {
+      margin-top: 15px;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    .file-selected {
+      color: #27ae60;
+      font-weight: 500;
+    }
+
+    /* Documents List */
+    .documents-grid {
+      display: grid;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .document-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .document-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .document-info {
+      flex: 1;
+    }
+
+    .document-name {
+      font-weight: 500;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .document-meta {
+      font-size: 12px;
+      color: #95a5a6;
+    }
+
+    .document-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-success {
+      background: #d5f4e6;
+      color: #27ae60;
+    }
+
+    .status-info {
+      background: #d6eaf8;
+      color: #3498db;
+    }
+
+    .status-error {
+      background: #fadbd8;
+      color: #e74c3c;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+    }
+
+    .alert {
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .alert-error {
+      background: #fadbd8;
+      color: #c0392b;
+      border: 1px solid #e74c3c;
+    }
+
+    .alert-success {
+      background: #d5f4e6;
+      color: #229954;
+      border: 1px solid #27ae60;
+    }
+
+    .alert-info {
+      background: #d6eaf8;
+      color: #2980b9;
+      border: 1px solid #3498db;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Pexify</h1>
+  <div class="container">
+    <h1>Pexify Document Management</h1>
+    <p style="color: #7f8c8d; margin-bottom: 20px;">Upload and manage your shipment documents</p>
 
-  <button id="runBtn">Kontrolü Çalıştır</button>
+    <!-- Auth Section -->
+    <div class="section">
+      <h2>Authentication</h2>
+      <div id="authStatus"></div>
+      <div class="auth-section">
+        <input type="email" id="emailInput" placeholder="Email" />
+        <input type="password" id="passwordInput" placeholder="Password" />
+        <button class="btn btn-primary" id="loginBtn">Sign In</button>
+        <button class="btn btn-secondary" id="signupBtn">Sign Up</button>
+        <button class="btn btn-danger" id="logoutBtn" style="display: none;">Logout</button>
+      </div>
+    </div>
 
-  <pre id="result">Sonuç burada görünecek</pre>
+    <!-- Upload Section -->
+    <div class="section" id="uploadSection" style="display: none;">
+      <h2>Upload Document</h2>
+      <div class="upload-area">
+        <label for="fileInput" class="upload-label">Choose File</label>
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.xls,.xlsx" />
+        <div class="file-info" id="fileInfo">No file selected</div>
+        <button class="btn btn-success" id="uploadBtn" style="margin-top: 15px; display: none;">
+          Upload to Supabase
+        </button>
+      </div>
+      <div id="uploadStatus" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- Documents Dashboard -->
+    <div class="section" id="dashboardSection" style="display: none;">
+      <h2>My Documents</h2>
+      <button class="btn btn-primary" id="refreshBtn">
+        Refresh List
+      </button>
+      <div id="documentsList" style="margin-top: 15px;">
+        <div class="empty-state">No documents yet. Upload your first document above!</div>
+      </div>
+    </div>
+
+    <!-- Validation Section (original) -->
+    <div class="section">
+      <h2>Run Validation Engine</h2>
+      <button class="btn btn-primary" id="runBtn">Run Validation Check</button>
+      <pre id="result" style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;">Result will appear here</pre>
+    </div>
+  </div>
 
   <script>
-    document.getElementById("runBtn").onclick = async () => {
-      const res = await fetch("/run", { method: "POST" });
+    // Supabase Configuration
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // User must replace this
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // User must replace this
+
+    let supabaseClient = null;
+    let currentUser = null;
+    let currentSession = null;
+
+    // Initialize Supabase
+    if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      checkAuth();
+    } else {
+      showAlert('authStatus', 'Please configure SUPABASE_URL and SUPABASE_ANON_KEY in index.html', 'error');
+    }
+
+    // Check authentication status
+    async function checkAuth() {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (session) {
+        currentSession = session;
+        currentUser = session.user;
+        showAuthenticatedUI();
+      } else {
+        showUnauthenticatedUI();
+      }
+    }
+
+    // Show alert message
+    function showAlert(elementId, message, type = 'info') {
+      const alertClass = `alert-${type}`;
+      document.getElementById(elementId).innerHTML = `
+        <div class="alert ${alertClass}">${message}</div>
+      `;
+    }
+
+    // UI States
+    function showAuthenticatedUI() {
+      showAlert('authStatus', `Logged in as: ${currentUser.email}`, 'success');
+      document.getElementById('loginBtn').style.display = 'none';
+      document.getElementById('signupBtn').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'inline-block';
+      document.getElementById('uploadSection').style.display = 'block';
+      document.getElementById('dashboardSection').style.display = 'block';
+      loadDocuments();
+    }
+
+    function showUnauthenticatedUI() {
+      showAlert('authStatus', 'Please sign in to upload documents', 'info');
+      document.getElementById('loginBtn').style.display = 'inline-block';
+      document.getElementById('signupBtn').style.display = 'inline-block';
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('uploadSection').style.display = 'none';
+      document.getElementById('dashboardSection').style.display = 'none';
+    }
+
+    // Auth handlers
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+
+      if (!email || !password) {
+        showAlert('authStatus', 'Please enter email and password', 'error');
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        showAlert('authStatus', `Login failed: ${error.message}`, 'error');
+      } else {
+        currentSession = data.session;
+        currentUser = data.user;
+        showAuthenticatedUI();
+      }
+    };
+
+    document.getElementById('signupBtn').onclick = async () => {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+
+      if (!email || !password) {
+        showAlert('authStatus', 'Please enter email and password', 'error');
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) {
+        showAlert('authStatus', `Signup failed: ${error.message}`, 'error');
+      } else {
+        showAlert('authStatus', 'Signup successful! Check your email to confirm.', 'success');
+      }
+    };
+
+    document.getElementById('logoutBtn').onclick = async () => {
+      await supabaseClient.auth.signOut();
+      currentSession = null;
+      currentUser = null;
+      showUnauthenticatedUI();
+    };
+
+    // File upload handlers
+    document.getElementById('fileInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('fileInfo').innerHTML = `
+          <span class="file-selected">✓ ${file.name} (${(file.size / 1024).toFixed(2)} KB)</span>
+        `;
+        document.getElementById('uploadBtn').style.display = 'inline-block';
+      } else {
+        document.getElementById('fileInfo').textContent = 'No file selected';
+        document.getElementById('uploadBtn').style.display = 'none';
+      }
+    };
+
+    document.getElementById('uploadBtn').onclick = async () => {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showAlert('uploadStatus', 'Please select a file', 'error');
+        return;
+      }
+
+      if (!currentSession) {
+        showAlert('uploadStatus', 'Please login first', 'error');
+        return;
+      }
+
+      const uploadBtn = document.getElementById('uploadBtn');
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentSession.access_token}`
+          },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showAlert('uploadStatus', `✓ ${result.message}`, 'success');
+          fileInput.value = '';
+          document.getElementById('fileInfo').textContent = 'No file selected';
+          uploadBtn.style.display = 'none';
+          loadDocuments(); // Refresh list
+        } else {
+          showAlert('uploadStatus', `Upload failed: ${result.error || result.details}`, 'error');
+        }
+      } catch (err) {
+        showAlert('uploadStatus', `Upload error: ${err.message}`, 'error');
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload to Supabase';
+      }
+    };
+
+    // Load documents
+    async function loadDocuments() {
+      if (!currentSession) return;
+
+      try {
+        const response = await fetch('/api/documents', {
+          headers: {
+            'Authorization': `Bearer ${currentSession.access_token}`
+          }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          displayDocuments(result.documents);
+        } else {
+          showAlert('documentsList', `Failed to load documents: ${result.error}`, 'error');
+        }
+      } catch (err) {
+        showAlert('documentsList', `Error loading documents: ${err.message}`, 'error');
+      }
+    }
+
+    // Display documents
+    function displayDocuments(documents) {
+      const container = document.getElementById('documentsList');
+
+      if (!documents || documents.length === 0) {
+        container.innerHTML = '<div class="empty-state">No documents yet. Upload your first document above!</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="documents-grid">
+          ${documents.map(doc => `
+            <div class="document-card">
+              <div class="document-info">
+                <div class="document-name">${doc.filename}</div>
+                <div class="document-meta">
+                  Uploaded: ${new Date(doc.uploaded_at).toLocaleString()} •
+                  ${(doc.file_size / 1024).toFixed(2)} KB
+                </div>
+              </div>
+              <div class="document-actions">
+                <button class="btn btn-primary btn-sm" onclick="previewDocument('${doc.id}')">
+                  Preview
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Preview document
+    async function previewDocument(docId) {
+      if (!currentSession) return;
+
+      try {
+        const response = await fetch(`/api/documents/${docId}/url`, {
+          headers: {
+            'Authorization': `Bearer ${currentSession.access_token}`
+          }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          window.open(result.signedUrl, '_blank');
+        } else {
+          alert(`Preview failed: ${result.error}`);
+        }
+      } catch (err) {
+        alert(`Preview error: ${err.message}`);
+      }
+    }
+
+    // Refresh button
+    document.getElementById('refreshBtn').onclick = loadDocuments;
+
+    // Original validation button
+    document.getElementById('runBtn').onclick = async () => {
+      const res = await fetch('/run', { method: 'POST' });
       const data = await res.json();
-      document.getElementById("result").textContent =
-        JSON.stringify(data, null, 2);
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
     };
   </script>
 </body>
 </html>
-
-
