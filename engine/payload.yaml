@@ -10,7 +10,7 @@ documents:
 
   packing_list:
     package_count: 10
-    gross_weight: 1000
+    gross_weight: 900
 
   bill_of_lading:
     bl_number: BL-555
